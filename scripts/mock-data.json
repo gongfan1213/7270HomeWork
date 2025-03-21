@@ -1,0 +1,32 @@
+[
+  {
+    "name": "张三",
+    "email": "zhangsan@example.com",
+    "age": 25,
+    "gender": "男",
+    "occupation": "学生",
+    "languages": ["JavaScript", "Python"],
+    "satisfaction": 8,
+    "feedback": "系统很好用，界面友好。"
+  },
+  {
+    "name": "李四",
+    "email": "lisi@example.com",
+    "age": 32,
+    "gender": "女",
+    "occupation": "工程师",
+    "languages": ["JavaScript", "Java", "C++"],
+    "satisfaction": 7,
+    "feedback": "功能齐全，但加载速度可以再快一些。"
+  },
+  {
+    "name": "王五",
+    "email": "wangwu@example.com",
+    "age": 45,
+    "gender": "男",
+    "occupation": "教师",
+    "languages": ["Python", "Java"],
+    "satisfaction": 9,
+    "feedback": "非常满意，希望能增加更多的数据分析功能。"
+  }
+]

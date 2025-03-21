@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>健康追踪 - 仪表盘</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f8f9fa;
+    }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 100;
+      padding: 48px 0 0;
+      box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1);
+      background-color: #4e73df;
+    }
+    .sidebar-sticky {
+      position: relative;
+      top: 0;
+      height: calc(100vh - 48px);
+      padding-top: .5rem;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+    .sidebar .nav-link {
+      font-weight: 500;
+      color: white;
+      padding: 10px 20px;
+    }
+    .sidebar .nav-link:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+    .sidebar .nav-link.active {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+    .sidebar .nav-link i {
+      margin-right: 10px;
+    }
+    main {
+      padding-top: 30px;
+    }
+    .card {
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+    .card-header {
+      background-color: #4e73df;
+      color: white;
+      border-radius: 10px 10px 0 0 !important;
+    }
+    .stat-card {
+      text-align: center;
+      padding: 15px;
+    }
+    .stat-card i {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      color: #4e73df;
+    }
+    .stat-card .stat-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+    .chart-container {
+      position: relative;
+      height: 300px;
+      width: 100%;
+    }
+    .navbar {
+      background-color: white;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .navbar-brand {
+      font-weight: bold;
+      color: #4e73df;
+    }
+    .form-control:focus {
+      border-color: #4e73df;
+      box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.25);
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">健康追踪</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" title="导航菜单">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+              <i class="bi bi-person-circle"></i> <span id="userName">用户</span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#profileModal">个人资料</a></li>
+              <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#settingsModal">设置</a></li>
+              <li><hr class="dropdown-divider"></li>
+              <li><a class="dropdown-item" href="#" id="logoutBtn">退出登录</a></li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid">
+    <div class="row">
+      <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+        <div class="sidebar-sticky">
+          <ul class="nav flex-column">
+            <li class="nav-item">
+              <a class="nav-link active" href="#overview">
+                <i class="bi bi-house-door"></i> 概览
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#weight">
+                <i class="bi bi-clipboard2-data"></i> 体重记录
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#exercise">
+                <i class="bi bi-activity"></i> 运动记录
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#sleep">
+                <i class="bi bi-moon"></i> 睡眠记录
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#goals">
+                <i class="bi bi-trophy"></i> 健康目标
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="#reports">
+                <i class="bi bi-bar-chart"></i> 健康报告
+              </a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+        <div id="overview" class="pt-3 pb-2 mb-3">
+          <h1 class="h2 mb-4">健康概览</h1>
+          
+          <div class="row">
+            <div class="col-xl-3 col-md-6">
+              <div class="card">
+                <div class="stat-card">
+                  <i class="bi bi-clipboard2-data"></i>
+                  <div class="stat-value" id="currentWeight">--</div>
+                  <div class="stat-label">当前体重 (kg)</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+              <div class="card">
+                <div class="stat-card">
+                  <i class="bi bi-activity"></i>
+                  <div class="stat-value" id="weeklyExercise">--</div>
+                  <div class="stat-label">本周运动 (分钟)</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+              <div class="card">
+                <div class="stat-card">
+                  <i class="bi bi-moon"></i>
+                  <div class="stat-value" id="avgSleep">--</div>
+                  <div class="stat-label">平均睡眠 (小时)</div>
+                </div>
+              </div>
+            </div>
+            <div class="col-xl-3 col-md-6">
+              <div class="card">
+                <div class="stat-card">
+                  <i class="bi bi-trophy"></i>
+                  <div class="stat-value" id="goalsAchieved">--</div>
+                  <div class="stat-label">目标完成率</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mt-4">
+            <div class="col-lg-6">
+              <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <h5 class="mb-0">体重趋势</h5>
+                  <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addWeightModal">
+                    <i class="bi bi-plus"></i> 添加记录
+                  </button>
+                </div>
+                <div class="card-body">
+                  <div class="chart-container">
+                    <canvas id="weightChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <h5 class="mb-0">运动分析</h5>
+                  <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addExerciseModal">
+                    <i class="bi bi-plus"></i> 添加记录
+                  </button>
+                </div>
+                <div class="card-body">
+                  <div class="chart-container">
+                    <canvas id="exerciseChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="row mt-4">
+            <div class="col-lg-6">
+              <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                  <h5 class="mb-0">睡眠质量</h5>
+                  <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addSleepModal">
+                    <i class="bi bi-plus"></i> 添加记录
+                  </button>
+                </div>
+                <div class="card-body">
+                  <div class="chart-container">
+                    <canvas id="sleepChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6">
+              <div class="card">
+                <div class="card-header">
+                  <h5 class="mb-0">健康目标进度</h5>
+                </div>
+                <div class="card-body">
+                  <div class="mb-3">
+                    <label class="form-label d-flex justify-content-between">
+                      <span>体重目标 (目标: <span id="weightGoal">--</span> kg)</span>
+                      <span id="weightGoalPercent">0%</span>
+                    </label>
+                    <div class="progress">
+                      <div id="weightGoalProgress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label d-flex justify-content-between">
+                      <span>每周运动 (目标: <span id="exerciseGoal">--</span> 分钟)</span>
+                      <span id="exerciseGoalPercent">0%</span>
+                    </label>
+                    <div class="progress">
+                      <div id="exerciseGoalProgress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label d-flex justify-content-between">
+                      <span>睡眠时间 (目标: <span id="sleepGoal">--</span> 小时)</span>
+                      <span id="sleepGoalPercent">0%</span>
+                    </label>
+                    <div class="progress">
+                      <div id="sleepGoalProgress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- 添加体重记录模态框 -->
+  <div class="modal fade" id="addWeightModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">添加体重记录</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="weightForm">
+            <div class="mb-3">
+              <label for="weightDate" class="form-label">日期</label>
+              <input type="date" class="form-control" id="weightDate" required>
+            </div>
+            <div class="mb-3">
+              <label for="weightValue" class="form-label">体重 (kg)</label>
+              <input type="number" step="0.1" class="form-control" id="weightValue" required>
+            </div>
+            <div class="mb-3">
+              <label for="weightNotes" class="form-label">备注</label>
+              <textarea class="form-control" id="weightNotes" rows="2"></textarea>
+            </div>
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">保存记录</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 添加运动记录模态框 -->
+  <div class="modal fade" id="addExerciseModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">添加运动记录</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="exerciseForm">
+            <div class="mb-3">
+              <label for="exerciseDate" class="form-label">日期</label>
+              <input type="date" class="form-control" id="exerciseDate" required>
+            </div>
+            <div class="mb-3">
+              <label for="exerciseType" class="form-label">运动类型</label>
+              <select class="form-control" id="exerciseType" required>
+                <option value="">请选择</option>
+                <option value="walking">步行</option>
+                <option value="running">跑步</option>
+                <option value="cycling">骑行</option>
+                <option value="swimming">游泳</option>
+                <option value="yoga">瑜伽</option>
+                <option value="weightlifting">举重</option>
+                <option value="other">其他</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="exerciseDuration" class="form-label">时长 (分钟)</label>
+              <input type="number" class="form-control" id="exerciseDuration" required>
+            </div>
+            <div class="mb-3">
+              <label for="exerciseCalories" class="form-label">消耗热量 (卡路里)</label>
+              <input type="number" class="form-control" id="exerciseCalories">
+            </div>
+            <div class="mb-3">
+              <label for="exerciseNotes" class="form-label">备注</label>
+              <textarea class="form-control" id="exerciseNotes" rows="2"></textarea>
+            </div>
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">保存记录</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 添加睡眠记录模态框 -->
+  <div class="modal fade" id="addSleepModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">添加睡眠记录</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="sleepForm">
+            <div class="mb-3">
+              <label for="sleepDate" class="form-label">日期</label>
+              <input type="date" class="form-control" id="sleepDate" required>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label for="sleepStart" class="form-label">入睡时间</label>
+                <input type="time" class="form-control" id="sleepStart" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label for="sleepEnd" class="form-label">起床时间</label>
+                <input type="time" class="form-control" id="sleepEnd" required>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="sleepQuality" class="form-label">睡眠质量</label>
+              <select class="form-control" id="sleepQuality" required>
+                <option value="">请选择</option>
+                <option value="5">非常好</option>
+                <option value="4">良好</option>
+                <option value="3">一般</option>
+                <option value="2">较差</option>
+                <option value="1">很差</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="sleepNotes" class="form-label">备注</label>
+              <textarea class="form-control" id="sleepNotes" rows="2"></textarea>
+            </div>
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">保存记录</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 个人资料模态框 -->
+  <div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">个人资料</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="profileForm">
+            <div class="mb-3">
+              <label for="profileName" class="form-label">姓名</label>
+              <input type="text" class="form-control" id="profileName" required>
+            </div>
+            <div class="mb-3">
+              <label for="profileEmail" class="form-label">电子邮箱</label>
+              <input type="email" class="form-control" id="profileEmail" readonly>
+            </div>
+            <div class="mb-3">
+              <label for="profileGender" class="form-label">性别</label>
+              <select class="form-control" id="profileGender">
+                <option value="">不指定</option>
+                <option value="male">男</option>
+                <option value="female">女</option>
+                <option value="other">其他</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="profileBirthdate" class="form-label">出生日期</label>
+              <input type="date" class="form-control" id="profileBirthdate">
+            </div>
+            <div class="mb-3">
+              <label for="profileHeight" class="form-label">身高 (cm)</label>
+              <input type="number" class="form-control" id="profileHeight">
+            </div>
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">保存资料</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设置模态框 -->
+  <div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">设置</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="settingsForm">
+            <h6 class="mb-3">健康目标</h6>
+            <div class="mb-3">
+              <label for="targetWeight" class="form-label">目标体重 (kg)</label>
+              <input type="number" step="0.1" class="form-control" id="targetWeight">
+            </div>
+            <div class="mb-3">
+              <label for="weeklyExerciseGoal" class="form-label">每周运动目标 (分钟)</label>
+              <input type="number" class="form-control" id="weeklyExerciseGoal">
+            </div>
+            <div class="mb-3">
+              <label for="dailySleepGoal" class="form-label">每日睡眠目标 (小时)</label>
+              <input type="number" step="0.5" class="form-control" id="dailySleepGoal">
+            </div>
+            
+            <hr>
+            <h6 class="mb-3">偏好设置</h6>
+            <div class="mb-3">
+              <label for="weightUnit" class="form-label">体重单位</label>
+              <select class="form-control" id="weightUnit">
+                <option value="kg">公斤 (kg)</option>
+                <option value="lb">磅 (lb)</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="distanceUnit" class="form-label">距离单位</label>
+              <select class="form-control" id="distanceUnit">
+                <option value="km">公里 (km)</option>
+                <option value="mi">英里 (mi)</option>
+              </select>
+            </div>
+            <div class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" id="enableNotifications">
+              <label class="form-check-label" for="enableNotifications">启用通知</label>
+            </div>
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">保存设置</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- 在页面底部添加脚本 -->
+  <script>
+    // 处理侧边栏导航
+    document.addEventListener('DOMContentLoaded', function() {
+      const navLinks = document.querySelectorAll('.sidebar .nav-link');
+      
+      // 创建内容区域对象
+      const contentSections = {
+        'overview': document.getElementById('overview'),
+        'weight': createSection('weight', '体重记录'),
+        'exercise': createSection('exercise', '运动记录'),
+        'sleep': createSection('sleep', '睡眠记录'),
+        'goals': createSection('goals', '健康目标'),
+        'reports': createSection('reports', '健康报告')
+      };
+      
+      // 默认显示概览，隐藏其他部分
+      Object.keys(contentSections).forEach(key => {
+        if (key !== 'overview') {
+          contentSections[key].style.display = 'none';
+        }
+      });
+      
+      // 为每个导航链接添加点击事件
+      navLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          // 获取目标部分的ID
+          const targetId = this.getAttribute('href').substring(1);
+          
+          // 隐藏所有内容区域
+          Object.values(contentSections).forEach(section => {
+            section.style.display = 'none';
+          });
+          
+          // 显示目标内容区域
+          if (contentSections[targetId]) {
+            contentSections[targetId].style.display = 'block';
+          }
+          
+          // 移除所有active类
+          navLinks.forEach(l => l.classList.remove('active'));
+          
+          // 添加active类到当前点击的链接
+          this.classList.add('active');
+        });
+      });
+      
+      // 处理退出登录
+      document.getElementById('logoutBtn').addEventListener('click', function() {
+        localStorage.removeItem('token');
+        window.location.href = '/';
+      });
+      
+      // 辅助函数：创建内容区域
+      function createSection(id, title) {
+        // 检查是否已存在
+        let section = document.getElementById(id);
+        if (section) return section;
+        
+        // 创建新的内容区域
+        section = document.createElement('div');
+        section.id = id;
+        section.className = 'pt-3 pb-2 mb-3';
+        
+        // 添加标题
+        const heading = document.createElement('h1');
+        heading.className = 'h2 mb-4';
+        heading.textContent = title;
+        section.appendChild(heading);
+        
+        // 添加占位内容
+        const placeholder = document.createElement('div');
+        placeholder.className = 'card';
+        placeholder.innerHTML = `
+          <div class="card-body">
+            <p class="text-center">正在加载${title}数据...</p>
+          </div>
+        `;
+        section.appendChild(placeholder);
+        
+        // 将新区域添加到主内容区
+        document.querySelector('main').appendChild(section);
+        
+        return section;
+      }
+    });
+  </script>
+</body>
+</html>
