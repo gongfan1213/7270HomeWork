@@ -1,7 +1,7 @@
 # 健康追踪应用
 # 初稿
 - 暂时的，后期提交会替换成英文的
-- AI功能暂时还没有加，后期会完善的
+- AI功能暂时还没有加，后期会完善的，百分之80的功能已经完成，后期再继续完善
 
 ![image](https://github.com/user-attachments/assets/b788c52c-5c70-4d35-a3bc-f1733c9ae25e)
 
@@ -58,6 +58,8 @@
 
 - 需要创建.env文件
 - 配置,在Azure上找到对应的字段，复制粘贴，前几节课的实验文档当中好像有如何配置的
+
+  
   ```js
   MONGO_URI=
 MONGO_DATABASE=
@@ -68,6 +70,8 @@ MONGO_DATABASE=
 MONGO_COLLECTION=
 JWT_SECRET=
 ```
+
+
 COMP7270 Web和移动编程 & COMP7980 动态Web和移动编程 - HKBU - 2025春季
 
 ## 项目描述
